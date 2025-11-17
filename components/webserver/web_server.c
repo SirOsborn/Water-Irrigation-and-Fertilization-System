@@ -83,27 +83,21 @@ static esp_err_t api_pump_handler(httpd_req_t *req)
     bool state = cJSON_GetObjectItem(json, "state")->valueint;
 
     if (pump == 1) {
-        // Set manual control flag when turning ON, clear when turning OFF
-        if (state) {
-            pump1_manual = true;  // Enable manual mode
-            ESP_LOGI(TAG, "Pump 1 MANUAL ON - automatic control disabled");
-        } else {
-            pump1_manual = false; // Disable manual mode (return to auto)
-            ESP_LOGI(TAG, "Pump 1 MANUAL OFF - automatic control re-enabled");
-        }
+        // Manual mode stays ON regardless of pump state (ON/OFF)
+        // User must use auto mode toggle to return to automatic control
+        pump1_manual = true;  // Always enable manual mode when user controls pump
         control_pump(RELAY_PUMP1, state);
         pump1_running = state;
+        ESP_LOGI(TAG, "Pump 1 MANUAL %s - automatic control disabled until auto mode re-enabled", 
+                 state ? "ON" : "OFF");
     } else if (pump == 2) {
-        // Set manual control flag when turning ON, clear when turning OFF
-        if (state) {
-            pump2_manual = true;  // Enable manual mode
-            ESP_LOGI(TAG, "Pump 2 MANUAL ON - automatic control disabled");
-        } else {
-            pump2_manual = false; // Disable manual mode (return to auto)
-            ESP_LOGI(TAG, "Pump 2 MANUAL OFF - automatic control re-enabled");
-        }
+        // Manual mode stays ON regardless of pump state (ON/OFF)
+        // User must use auto mode toggle to return to automatic control
+        pump2_manual = true;  // Always enable manual mode when user controls pump
         control_pump(RELAY_PUMP2, state);
         pump2_running = state;
+        ESP_LOGI(TAG, "Pump 2 MANUAL %s - automatic control disabled until auto mode re-enabled", 
+                 state ? "ON" : "OFF");
     }
 
     cJSON_Delete(json);
@@ -131,7 +125,15 @@ static esp_err_t api_auto_handler(httpd_req_t *req)
     }
 
     auto_mode = cJSON_GetObjectItem(json, "enabled")->valueint;
-    ESP_LOGI(TAG, "Auto mode: %s", auto_mode ? "ENABLED" : "DISABLED");
+    
+    // When auto mode is enabled, clear manual flags to allow automatic control
+    if (auto_mode) {
+        pump1_manual = false;
+        pump2_manual = false;
+        ESP_LOGI(TAG, "Auto mode ENABLED - clearing manual control flags");
+    } else {
+        ESP_LOGI(TAG, "Auto mode DISABLED - manual control only");
+    }
 
     cJSON_Delete(json);
 
