@@ -73,22 +73,32 @@ void irrigation_task(void *pvParameters) {
         control_water_alert_led(!water_tank_full);
         control_fertilizer_alert_led(!fertilizer_tank_full);
         
-        // Only run automatic irrigation if auto mode is enabled and no manual control
-        if (auto_mode && !pump1_manual && !pump2_manual) {
+        // Automatic irrigation logic (only if auto mode enabled)
+        if (auto_mode) {
             // Check if soil is dry
             if (soil_moisture > soil_dry_threshold) {
                 ESP_LOGI(TAG, "Soil is DRY (moisture: %d > %d) - Starting irrigation", soil_moisture, soil_dry_threshold);
                 
-                if (water_tank_full) {
-                    ESP_LOGI(TAG, "Pumping water for %d ms", pump_duration_ms);
-                    control_pump(RELAY_PUMP1, true);
-                    pump1_running = true;
-                    vTaskDelay(pdMS_TO_TICKS(pump_duration_ms));
-                    control_pump(RELAY_PUMP1, false);
-                    pump1_running = false;
-                    
-                    vTaskDelay(pdMS_TO_TICKS(1000));
-                    
+                // Only control pump1 if NOT in manual mode
+                if (!pump1_manual) {
+                    if (water_tank_full) {
+                        ESP_LOGI(TAG, "Pumping water for %d ms", pump_duration_ms);
+                        control_pump(RELAY_PUMP1, true);
+                        pump1_running = true;
+                        vTaskDelay(pdMS_TO_TICKS(pump_duration_ms));
+                        control_pump(RELAY_PUMP1, false);
+                        pump1_running = false;
+                        
+                        vTaskDelay(pdMS_TO_TICKS(1000));
+                    } else {
+                        ESP_LOGW(TAG, "Water tank is EMPTY - cannot irrigate");
+                    }
+                } else {
+                    ESP_LOGI(TAG, "Pump 1 is in MANUAL mode - skipping automatic control");
+                }
+                
+                // Only control pump2 if NOT in manual mode
+                if (!pump2_manual) {
                     if (fertilizer_tank_full) {
                         ESP_LOGI(TAG, "Pumping fertilizer for %d ms", fertilizer_duration_ms);
                         control_pump(RELAY_PUMP2, true);
@@ -100,11 +110,13 @@ void irrigation_task(void *pvParameters) {
                         ESP_LOGW(TAG, "Fertilizer tank is EMPTY - skipping");
                     }
                 } else {
-                    ESP_LOGW(TAG, "Water tank is EMPTY - cannot irrigate");
+                    ESP_LOGI(TAG, "Pump 2 is in MANUAL mode - skipping automatic control");
                 }
             } else {
                 ESP_LOGI(TAG, "Soil moisture is adequate - no irrigation needed");
             }
+        } else {
+            ESP_LOGI(TAG, "Automatic mode is OFF - manual control only");
         }
         
         ESP_LOGI(TAG, "Waiting %d seconds before next check...\n", check_interval_ms / 1000);

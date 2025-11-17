@@ -8,8 +8,8 @@
 #include "esp_netif.h"
 
 // WiFi Configuration - CHANGE THESE TO YOUR NETWORK
-#define WIFI_SSID      "SamDach"
-#define WIFI_PASS      "hahahaha"
+#define WIFI_SSID      "CAMTECH-STUDENT"
+#define WIFI_PASS      "2!CamTech!@$"
 #define WIFI_MAXIMUM_RETRY  5
 
 #define WIFI_CONNECTED_BIT BIT0

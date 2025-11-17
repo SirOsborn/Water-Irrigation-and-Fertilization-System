@@ -1,11 +1,12 @@
-#ifndef IRRIGATION_CONTROL_H
-#define IRRIGATION_CONTROL_H
+#ifndef SENSORS_H
+#define SENSORS_H
 
 #include "driver/gpio.h"
 #include "driver/adc.h"
 #include "esp_adc_cal.h"
+#include <stdbool.h>
 
-// GPIO Pins
+// GPIO Pin Definitions
 #define RELAY_PUMP1     GPIO_NUM_27
 #define RELAY_PUMP2     GPIO_NUM_26
 #define WATER_LEVEL1    GPIO_NUM_34
@@ -19,9 +20,5 @@ void init_gpio(void);
 void init_adc(void);
 int read_soil_moisture(void);
 bool read_water_level_digital(gpio_num_t pin);
-void control_pump(gpio_num_t relay_pin, bool state);
-void control_water_alert_led(bool state);
-void control_fertilizer_alert_led(bool state);
-void irrigation_task(void *pvParameters);
 
-#endif // IRRIGATION_CONTROL_H
+#endif // SENSORS_H
